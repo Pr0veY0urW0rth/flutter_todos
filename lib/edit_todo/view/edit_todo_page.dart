@@ -1,49 +1,48 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_todos/edit_todo/edit_todo.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_todos/edit_todo/notifier/edit_todo_notifier.dart';
+import 'package:flutter_todos/edit_todo/notifier/edit_todo_state.dart';
 import 'package:flutter_todos/l10n/l10n.dart';
 import 'package:todos_repository/todos_repository.dart';
 
-class EditTodoPage extends StatelessWidget {
-  const EditTodoPage({super.key});
+class EditTodoPage extends ConsumerWidget {
+  const EditTodoPage(this.initialTodo, {super.key});
+  final Todo? initialTodo;
 
   static Route<void> route({Todo? initialTodo}) {
     return MaterialPageRoute(
       fullscreenDialog: true,
-      builder: (context) => BlocProvider(
-        create: (context) => EditTodoBloc(
-          todosRepository: context.read<TodosRepository>(),
-          initialTodo: initialTodo,
-        ),
-        child: const EditTodoPage(),
-      ),
+      builder: (context) => EditTodoPage(initialTodo),
     );
   }
 
   @override
-  Widget build(BuildContext context) {
-    return BlocListener<EditTodoBloc, EditTodoState>(
-      listenWhen: (previous, current) =>
-          previous.status != current.status &&
-          current.status == EditTodoStatus.success,
-      listener: (context, state) => Navigator.of(context).pop(),
-      child: const EditTodoView(),
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      ref.read(editTodoNotifierProvider.notifier).initTodo(this.initialTodo);
+    });
+    ref.listen(editTodoNotifierProvider, ((previous, next) {
+      if (previous?.status != next.status &&
+          next.status == EditTodoStatus.success) {
+        Navigator.of(context).pop();
+        ref.invalidate(editTodoNotifierProvider);
+      }
+    }));
+    return const EditTodoView();
   }
 }
 
-class EditTodoView extends StatelessWidget {
+class EditTodoView extends ConsumerWidget {
   const EditTodoView({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final status = context.select((EditTodoBloc bloc) => bloc.state.status);
-    final isNewTodo = context.select(
-      (EditTodoBloc bloc) => bloc.state.isNewTodo,
-    );
+    final status = ref.watch(editTodoNotifierProvider).status;
+    final isNewTodo = ref.watch(editTodoNotifierProvider.notifier).isNewTodo;
 
     return Scaffold(
       appBar: AppBar(
@@ -60,7 +59,7 @@ class EditTodoView extends StatelessWidget {
         ),
         onPressed: status.isLoadingOrSuccess
             ? null
-            : () => context.read<EditTodoBloc>().add(const EditTodoSubmitted()),
+            : () => ref.read(editTodoNotifierProvider.notifier).submitToDo(),
         child: status.isLoadingOrSuccess
             ? const CupertinoActivityIndicator()
             : const Icon(Icons.check_rounded),
@@ -70,7 +69,7 @@ class EditTodoView extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.all(16),
             child: Column(
-              children: [_TitleField(), _DescriptionField()],
+              children: [TitleField(), DescriptionField()],
             ),
           ),
         ),
@@ -79,13 +78,13 @@ class EditTodoView extends StatelessWidget {
   }
 }
 
-class _TitleField extends StatelessWidget {
-  const _TitleField();
+class TitleField extends ConsumerWidget {
+  const TitleField();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final state = context.watch<EditTodoBloc>().state;
+    final state = ref.watch(editTodoNotifierProvider);
     final hintText = state.initialTodo?.title ?? '';
 
     return TextFormField(
@@ -102,20 +101,19 @@ class _TitleField extends StatelessWidget {
         FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s]')),
       ],
       onChanged: (value) {
-        context.read<EditTodoBloc>().add(EditTodoTitleChanged(value));
+        ref.read(editTodoNotifierProvider.notifier).updateTitle(value);
       },
     );
   }
 }
 
-class _DescriptionField extends StatelessWidget {
-  const _DescriptionField();
-
+class DescriptionField extends ConsumerWidget {
+  const DescriptionField();
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
 
-    final state = context.watch<EditTodoBloc>().state;
+    final state = ref.watch(editTodoNotifierProvider);
     final hintText = state.initialTodo?.description ?? '';
 
     return TextFormField(
@@ -132,7 +130,7 @@ class _DescriptionField extends StatelessWidget {
         LengthLimitingTextInputFormatter(300),
       ],
       onChanged: (value) {
-        context.read<EditTodoBloc>().add(EditTodoDescriptionChanged(value));
+        ref.read(editTodoNotifierProvider.notifier).updateDescription(value);
       },
     );
   }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_todos/home/home.dart';
 import 'package:flutter_todos/l10n/l10n.dart';
 import 'package:flutter_todos/theme/theme.dart';
@@ -12,10 +11,7 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider.value(
-      value: todosRepository,
-      child: const AppView(),
-    );
+    return const AppView();
   }
 }
 

@@ -1,4 +1,6 @@
-part of 'todos_overview_bloc.dart';
+import 'package:equatable/equatable.dart';
+import 'package:flutter_todos/todos_overview/models/todos_view_filter.dart';
+import 'package:todos_repository/todos_repository.dart';
 
 enum TodosOverviewStatus { initial, loading, success, failure }
 
