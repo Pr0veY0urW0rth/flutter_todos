@@ -36,7 +36,7 @@ class TodosOverviewNotifier extends StateNotifier<TodosOverviewState> {
   }
 
   Future<void> todoDelete(Todo todo) async {
-    state.copyWith(lastDeletedTodo: () => todo);
+    state = state.copyWith(lastDeletedTodo: () => todo);
     await _todosRepository.deleteTodo(todo.id);
   }
 
@@ -47,12 +47,12 @@ class TodosOverviewNotifier extends StateNotifier<TodosOverviewState> {
     );
 
     final todo = state.lastDeletedTodo!;
-    state.copyWith(lastDeletedTodo: () => null);
+    state = state.copyWith(lastDeletedTodo: () => null);
     await _todosRepository.saveTodo(todo);
   }
 
   void changeFilter(TodosViewFilter filter) {
-    state.copyWith(filter: () => filter);
+    state = state.copyWith(filter: () => filter);
   }
 
   Future<void> toggleAllRequested() async {

@@ -22,13 +22,14 @@ class EditTodoPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      ref.read(editTodoNotifierProvider.notifier).initTodo(this.initialTodo);
+      print(ref.read(editTodoNotifierProvider));
+      ref.watch(editTodoNotifierProvider.notifier).initTodo(this.initialTodo);
+      print(editTodoNotifierProvider);
     });
     ref.listen(editTodoNotifierProvider, ((previous, next) {
       if (previous?.status != next.status &&
           next.status == EditTodoStatus.success) {
         Navigator.of(context).pop();
-        ref.invalidate(editTodoNotifierProvider);
       }
     }));
     return const EditTodoView();
@@ -43,6 +44,7 @@ class EditTodoView extends ConsumerWidget {
     final l10n = context.l10n;
     final status = ref.watch(editTodoNotifierProvider).status;
     final isNewTodo = ref.watch(editTodoNotifierProvider.notifier).isNewTodo;
+    final state = ref.watch(editTodoNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -64,12 +66,25 @@ class EditTodoView extends ConsumerWidget {
             ? const CupertinoActivityIndicator()
             : const Icon(Icons.check_rounded),
       ),
-      body: const CupertinoScrollbar(
+      body: CupertinoScrollbar(
         child: SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.all(16),
             child: Column(
-              children: [TitleField(), DescriptionField()],
+              children: [
+                TitleField(
+                  localState: state,
+                  onChanged: (value) => ref
+                      .read(editTodoNotifierProvider.notifier)
+                      .updateTitle(value),
+                ),
+                DescriptionField(
+                  localState: state,
+                  onChanged: (value) => ref
+                      .read(editTodoNotifierProvider.notifier)
+                      .updateDescription(value),
+                )
+              ],
             ),
           ),
         ),
@@ -78,20 +93,26 @@ class EditTodoView extends ConsumerWidget {
   }
 }
 
-class TitleField extends ConsumerWidget {
-  const TitleField();
+class TitleField extends StatelessWidget {
+  const TitleField({this.onChanged, required this.localState});
+
+  final EditTodoState localState;
+  final Function(String)? onChanged;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final state = ref.watch(editTodoNotifierProvider);
-    final hintText = state.initialTodo?.title ?? '';
+    final hintText = localState.initialTodo?.title ?? '';
+    TextEditingController _controller =
+        new TextEditingController(text: localState.title);
+    _controller.selection = TextSelection.fromPosition(
+        TextPosition(offset: localState.title.toString().length));
 
     return TextFormField(
       key: const Key('editTodoView_title_textFormField'),
-      initialValue: state.title,
+      controller: _controller,
       decoration: InputDecoration(
-        enabled: !state.status.isLoadingOrSuccess,
+        enabled: !localState.status.isLoadingOrSuccess,
         labelText: l10n.editTodoTitleLabel,
         hintText: hintText,
       ),
@@ -100,27 +121,31 @@ class TitleField extends ConsumerWidget {
         LengthLimitingTextInputFormatter(50),
         FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s]')),
       ],
-      onChanged: (value) {
-        ref.read(editTodoNotifierProvider.notifier).updateTitle(value);
-      },
+      onChanged: onChanged,
     );
   }
 }
 
-class DescriptionField extends ConsumerWidget {
-  const DescriptionField();
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
+class DescriptionField extends StatelessWidget {
+  const DescriptionField({this.onChanged, required this.localState});
+  final EditTodoState localState;
+  final Function(String)? onChanged;
 
-    final state = ref.watch(editTodoNotifierProvider);
-    final hintText = state.initialTodo?.description ?? '';
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final hintText = localState.initialTodo?.description ?? '';
+    TextEditingController _controller =
+        new TextEditingController(text: localState.description);
+    _controller.selection = TextSelection.fromPosition(
+        TextPosition(offset: localState.description.toString().length));
 
     return TextFormField(
       key: const Key('editTodoView_description_textFormField'),
-      initialValue: state.description,
+      //initialValue: initialText,
+      controller: _controller,
       decoration: InputDecoration(
-        enabled: !state.status.isLoadingOrSuccess,
+        enabled: !localState.status.isLoadingOrSuccess,
         labelText: l10n.editTodoDescriptionLabel,
         hintText: hintText,
       ),
@@ -129,9 +154,7 @@ class DescriptionField extends ConsumerWidget {
       inputFormatters: [
         LengthLimitingTextInputFormatter(300),
       ],
-      onChanged: (value) {
-        ref.read(editTodoNotifierProvider.notifier).updateDescription(value);
-      },
+      onChanged: onChanged,
     );
   }
 }

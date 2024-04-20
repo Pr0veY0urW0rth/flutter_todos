@@ -39,13 +39,16 @@ class EditTodoNotifier extends StateNotifier<EditTodoState> {
 
   bool get isNewTodo => state.initialTodo == null;
 
-  void initTodo(Todo? todo) {
-    state = state.copyWith(initialTodo: todo);
+  void initTodo(Todo? todo) async {
+    final title = todo != null ? todo.title : '';
+    final description = todo != null ? todo.description : '';
+    state = state.copyWith(
+        initialTodo: todo, description: description, title: title);
   }
 }
 
 final editTodoNotifierProvider =
-    StateNotifierProvider<EditTodoNotifier, EditTodoState>((ref) {
+    StateNotifierProvider.autoDispose<EditTodoNotifier, EditTodoState>((ref) {
   final todosRepository = ref.watch(todosRepositoryProvider);
   return EditTodoNotifier(
     todosRepository: todosRepository,
