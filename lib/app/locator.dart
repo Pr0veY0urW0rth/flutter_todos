@@ -2,6 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_storage_todos_api/local_storage_todos_api.dart';
 import 'package:todos_api/todos_api.dart';
 import 'package:todos_repository/todos_repository.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'locator.g.dart';
 
 class AppSharedPrefs {
   static AppSharedPrefs? _instance;
@@ -23,12 +26,16 @@ class AppSharedPrefs {
   }
 }
 
-final sharedPrefs = Provider<SharedPreferences>((_) => AppSharedPrefs._prefs!);
+final sharedPreferences =
+    Provider<SharedPreferences>((_) => AppSharedPrefs._prefs!);
 
-final todosApiProvider = Provider<TodosApi>(
-    (ref) => LocalStorageTodosApi(plugin: ref.watch(sharedPrefs)));
+@Riverpod(keepAlive: true)
+TodosApi todosApi(TodosApiRef ref) {
+  return LocalStorageTodosApi(plugin: ref.watch(sharedPreferences));
+}
 
-final todosRepositoryProvider = Provider<TodosRepository>((ref) {
+@Riverpod(keepAlive: true)
+TodosRepository todosRepository(TodosRepositoryRef ref) {
   final todosApi = ref.watch(todosApiProvider);
   return TodosRepository(todosApi: todosApi);
-});
+}
