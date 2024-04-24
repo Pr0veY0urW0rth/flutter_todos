@@ -1,21 +1,23 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_todos/app/locator.dart';
 import 'package:flutter_todos/edit_todo/notifier/edit_todo_state.dart';
 import 'package:todos_repository/todos_repository.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-class EditTodoNotifier extends StateNotifier<EditTodoState> {
-  EditTodoNotifier({
-    required TodosRepository todosRepository,
-    required Todo? initialTodo,
-  })  : _todosRepository = todosRepository,
-        super(
-          EditTodoState(
-            initialTodo: initialTodo,
-            title: initialTodo?.title ?? '',
-            description: initialTodo?.description ?? '',
-          ),
-        );
-  final TodosRepository _todosRepository;
+part 'edit_todo_notifier.g.dart';
+
+@riverpod
+class EditToDoNotifier extends _$EditToDoNotifier {
+  late TodosRepository _todosRepository;
+
+  @override
+  EditTodoState build() {
+    _todosRepository = ref.watch(todosRepositoryProvider);
+    return EditTodoState(
+      initialTodo: null,
+      title: '',
+      description: '',
+    );
+  }
 
   void updateTitle(String title) => state = state.copyWith(title: title);
 
@@ -46,12 +48,3 @@ class EditTodoNotifier extends StateNotifier<EditTodoState> {
         initialTodo: todo, description: description, title: title);
   }
 }
-
-final editTodoNotifierProvider =
-    StateNotifierProvider.autoDispose<EditTodoNotifier, EditTodoState>((ref) {
-  final todosRepository = ref.watch(todosRepositoryProvider);
-  return EditTodoNotifier(
-    todosRepository: todosRepository,
-    initialTodo: null,
-  );
-});

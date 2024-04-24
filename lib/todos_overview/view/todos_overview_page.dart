@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_todos/edit_todo/view/edit_todo_page.dart';
 import 'package:flutter_todos/l10n/l10n.dart';
@@ -10,12 +11,16 @@ class TodosOverviewPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      ref.read(todosOverviewNotifierProvider.notifier).subscribeToTodos();
+    });
+
     final l10n = context.l10n;
-    final todosState = ref.watch(todosOverwiewNotifierProvider);
-    final filter = ref.watch(todosOverwiewNotifierProvider).filter;
+    final todosState = ref.watch(todosOverviewNotifierProvider);
+    final filter = ref.watch(todosOverviewNotifierProvider).filter;
 
     ref.listen(
-      todosOverwiewNotifierProvider.select((value) => value),
+      todosOverviewNotifierProvider.select((value) => value),
       ((previous, next) {
         if (todosState.status == TodosOverviewStatus.failure) {
           ScaffoldMessenger.of(context)
@@ -44,7 +49,7 @@ class TodosOverviewPage extends ConsumerWidget {
                   onPressed: () {
                     messenger.hideCurrentSnackBar();
                     ref
-                        .read(todosOverwiewNotifierProvider.notifier)
+                        .read(todosOverviewNotifierProvider.notifier)
                         .undoDeletionRequest();
                   },
                 ),
@@ -60,7 +65,7 @@ class TodosOverviewPage extends ConsumerWidget {
           TodosOverviewFilterButton(
             activeFilter: filter,
             onSelected: (filter) => ref
-                .read(todosOverwiewNotifierProvider.notifier)
+                .read(todosOverviewNotifierProvider.notifier)
                 .changeFilter(filter),
           ),
           TodosOverviewOptionsButton(),
@@ -85,12 +90,12 @@ class TodosOverviewPage extends ConsumerWidget {
                       todo: todo,
                       onToggleCompleted: (isCompleted) {
                         ref
-                            .read(todosOverwiewNotifierProvider.notifier)
+                            .read(todosOverviewNotifierProvider.notifier)
                             .todoToggleCompletion(todo, isCompleted);
                       },
                       onDismissed: (_) {
                         ref
-                            .read(todosOverwiewNotifierProvider.notifier)
+                            .read(todosOverviewNotifierProvider.notifier)
                             .todoDelete(todo);
                       },
                       onTap: () {

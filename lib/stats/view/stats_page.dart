@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_todos/l10n/l10n.dart';
 import 'package:flutter_todos/stats/notifier/stats_notifier.dart';
@@ -9,6 +10,9 @@ class StatsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      ref.read(statsNotifierProvider.notifier).subscribeToTodos();
+    });
     final statsState = ref.watch(statsNotifierProvider);
     final l10n = context.l10n;
     final textTheme = Theme.of(context).textTheme;

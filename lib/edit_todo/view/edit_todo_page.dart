@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_todos/edit_todo/notifier/edit_todo_notifier.dart';
 import 'package:flutter_todos/edit_todo/notifier/edit_todo_state.dart';
-import 'package:flutter_todos/l10n/l10n.dart';
 import 'package:todos_repository/todos_repository.dart';
+import 'package:flutter_todos/l10n/l10n.dart';
 
 class EditTodoPage extends ConsumerWidget {
   const EditTodoPage(this.initialTodo, {super.key});
@@ -22,11 +22,9 @@ class EditTodoPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      print(ref.read(editTodoNotifierProvider));
-      ref.watch(editTodoNotifierProvider.notifier).initTodo(this.initialTodo);
-      print(editTodoNotifierProvider);
+      ref.watch(editToDoNotifierProvider.notifier).initTodo(this.initialTodo);
     });
-    ref.listen(editTodoNotifierProvider, ((previous, next) {
+    ref.listen(editToDoNotifierProvider, ((previous, next) {
       if (previous?.status != next.status &&
           next.status == EditTodoStatus.success) {
         Navigator.of(context).pop();
@@ -42,9 +40,9 @@ class EditTodoView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final status = ref.watch(editTodoNotifierProvider).status;
-    final isNewTodo = ref.watch(editTodoNotifierProvider.notifier).isNewTodo;
-    final state = ref.watch(editTodoNotifierProvider);
+    final status = ref.watch(editToDoNotifierProvider).status;
+    final isNewTodo = ref.watch(editToDoNotifierProvider.notifier).isNewTodo;
+    final state = ref.watch(editToDoNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -61,7 +59,7 @@ class EditTodoView extends ConsumerWidget {
         ),
         onPressed: status.isLoadingOrSuccess
             ? null
-            : () => ref.read(editTodoNotifierProvider.notifier).submitToDo(),
+            : () => ref.read(editToDoNotifierProvider.notifier).submitToDo(),
         child: status.isLoadingOrSuccess
             ? const CupertinoActivityIndicator()
             : const Icon(Icons.check_rounded),
@@ -75,13 +73,13 @@ class EditTodoView extends ConsumerWidget {
                 TitleField(
                   localState: state,
                   onChanged: (value) => ref
-                      .read(editTodoNotifierProvider.notifier)
+                      .read(editToDoNotifierProvider.notifier)
                       .updateTitle(value),
                 ),
                 DescriptionField(
                   localState: state,
                   onChanged: (value) => ref
-                      .read(editTodoNotifierProvider.notifier)
+                      .read(editToDoNotifierProvider.notifier)
                       .updateDescription(value),
                 )
               ],

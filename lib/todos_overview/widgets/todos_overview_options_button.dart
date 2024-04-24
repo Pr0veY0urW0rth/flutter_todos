@@ -13,7 +13,7 @@ class TodosOverviewOptionsButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
 
-    final todos = ref.watch(todosOverwiewNotifierProvider).todos;
+    final todos = ref.watch(todosOverviewNotifierProvider).todos;
     final hasTodos = todos.isNotEmpty;
     final completedTodosAmount = todos.where((todo) => todo.isCompleted).length;
 
@@ -26,11 +26,11 @@ class TodosOverviewOptionsButton extends ConsumerWidget {
         switch (options) {
           case TodosOverviewOption.toggleAll:
             ref
-                .read(todosOverwiewNotifierProvider.notifier)
+                .read(todosOverviewNotifierProvider.notifier)
                 .toggleAllRequested();
           case TodosOverviewOption.clearCompleted:
             ref
-                .read(todosOverwiewNotifierProvider.notifier)
+                .read(todosOverviewNotifierProvider.notifier)
                 .clearCompletedRequested();
         }
       },

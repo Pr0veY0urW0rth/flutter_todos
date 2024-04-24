@@ -1,18 +1,23 @@
 import 'dart:async';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_todos/app/locator.dart';
 import 'package:flutter_todos/stats/notifier/stats_state.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:todos_repository/todos_repository.dart';
 
-class StatsNotifier extends StateNotifier<StatsState> {
-  final TodosRepository _todosRepository;
+part 'stats_notifier.g.dart';
+
+@riverpod //(keepAlive: true)
+class StatsNotifier extends _$StatsNotifier {
+  late TodosRepository _todosRepository;
   late StreamSubscription<List<Todo>> _subscription;
 
-  StatsNotifier(this._todosRepository) : super(const StatsState()) {
-    _subscribeToTodos();
+  @override
+  StatsState build() {
+    _todosRepository = ref.watch(todosRepositoryProvider);
+    return const StatsState();
   }
 
-  Future<void> _subscribeToTodos() async {
+  Future<void> subscribeToTodos() async {
     state = state.copyWith(status: StatsStatus.loading);
     try {
       _subscription = _todosRepository.getTodos().listen((todos) {
@@ -29,13 +34,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
     }
   }
 
-  @override
   void dispose() {
     _subscription.cancel();
-    super.dispose();
   }
 }
-
-final statsNotifierProvider = StateNotifierProvider<StatsNotifier, StatsState>(
-  (ref) => StatsNotifier(ref.watch(todosRepositoryProvider)),
-);

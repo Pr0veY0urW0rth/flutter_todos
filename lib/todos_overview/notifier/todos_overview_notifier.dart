@@ -1,20 +1,26 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_todos/app/locator.dart';
 import 'package:flutter_todos/todos_overview/models/todos_view_filter.dart';
 import 'package:flutter_todos/todos_overview/notifier/todos_overview_state.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:todos_repository/todos_repository.dart';
 
-class TodosOverviewNotifier extends StateNotifier<TodosOverviewState> {
-  final TodosRepository _todosRepository;
+part 'todos_overview_notifier.g.dart';
+
+@riverpod
+class TodosOverviewNotifier extends _$TodosOverviewNotifier {
+  late TodosRepository _todosRepository;
   late StreamSubscription<List<Todo>> _subscription;
-  TodosOverviewNotifier(this._todosRepository)
-      : super(const TodosOverviewState()) {
-    _subscribeToTodos();
+
+  @override
+  TodosOverviewState build() {
+    _todosRepository = ref.watch(todosRepositoryProvider);
+
+    return const TodosOverviewState();
   }
 
-  Future<void> _subscribeToTodos() async {
+  Future<void> subscribeToTodos() async {
     state = state.copyWith(status: () => TodosOverviewStatus.loading);
     try {
       _subscription = _todosRepository.getTodos().listen((todos) {
@@ -64,16 +70,7 @@ class TodosOverviewNotifier extends StateNotifier<TodosOverviewState> {
     await _todosRepository.clearCompleted();
   }
 
-  @override
   void dispose() {
     _subscription.cancel();
-    super.dispose();
   }
 }
-
-final todosOverwiewNotifierProvider =
-    StateNotifierProvider<TodosOverviewNotifier, TodosOverviewState>((ref) {
-  return TodosOverviewNotifier(
-    (ref.watch(todosRepositoryProvider)),
-  );
-});
