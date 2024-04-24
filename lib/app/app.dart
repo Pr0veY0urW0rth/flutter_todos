@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_todos/home/home.dart';
 import 'package:flutter_todos/l10n/l10n.dart';
 import 'package:flutter_todos/theme/theme.dart';
-import 'package:todos_repository/todos_repository.dart';
 
 class App extends StatelessWidget {
-  const App({required this.todosRepository, super.key});
-
-  final TodosRepository todosRepository;
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
